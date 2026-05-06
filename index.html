@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missão IMR - Fiscalito</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; margin: 0; }
+        
+        .fiscalito-img { 
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            filter: drop-shadow(0 12px 24px rgba(0,0,0,0.15));
+        }
+
+        .btn-card { transition: all 0.2s ease; border: 2px solid #e2e8f0; background-color: white; cursor: pointer; }
+        .btn-card:hover { border-color: #2563eb; background-color: #eff6ff; transform: translateY(-2px); }
+        .progress-bar { transition: width 0.5s ease-in-out; }
+    </style>
+</head>
+<body>
+
+<div id="app" class="max-w-md mx-auto bg-white min-h-screen shadow-2xl flex flex-col relative overflow-hidden text-slate-800">
+    
+    <header class="bg-[#002d5e] text-white p-4 shadow-lg flex items-center justify-between z-20">
+        <div class="flex items-center gap-2">
+            <div class="bg-white p-1 rounded-full text-xl shadow-md">👮</div>
+            <div>
+                <h1 class="text-sm font-black leading-tight uppercase tracking-tighter">Missão IMR</h1>
+                <p class="text-[9px] opacity-80 uppercase font-bold text-blue-200">SEA-SC / IN 10/2025</p>
+            </div>
+        </div>
+        <div class="text-right">
+            <p class="text-[9px] uppercase opacity-60">Status</p>
+            <p class="text-xs font-bold text-orange-400">ESPECIALISTA</p>
+        </div>
+    </header>
+
+    <main v-if="tela === 'inicio'" class="flex-1 flex flex-col items-center justify-center p-6 text-center animate__animated animate__fadeIn">
+        <div class="w-full flex justify-center mb-8">
+            <img src="https://i.ibb.co/HMnxncn/Fiscalito.png">
+        </div>
+
+        <div class="px-2">
+            <h2 class="text-3xl font-black text-slate-800 mb-2 tracking-tighter">Pronto para Fiscalizar?</h2>
+            <p class="text-slate-500 mb-10 text-sm leading-relaxed px-4">
+                Monte indicadores robustos baseados na <span class="font-bold text-blue-600">IN 10/2025</span>. 
+                Garanta a segurança jurídica da sua fiscalização.
+            </p>
+            
+            <button @click="irParaMissoes" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all active:scale-95 text-lg uppercase">
+                ESCOLHER MISSÃO
+            </button>
+            <p class="mt-8 text-[11px] font-bold text-orange-600 uppercase tracking-widest italic">
+                "Rastreabilidade é o nosso escudo"
+            </p>
+        </div>
+    </main>
+
+    <main v-if="tela === 'missoes'" class="flex-1 p-6 overflow-y-auto animate__animated animate__fadeInRight">
+        <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 text-center">Ordens de Serviço Disponíveis</h3>
+        <div class="space-y-3">
+            <div v-for="m in missoes" :key="m.id" @click="selecionarMissao(m)" 
+                 class="p-4 bg-white border-2 border-slate-100 rounded-2xl hover:border-blue-500 cursor-pointer flex justify-between items-center shadow-sm">
+                <div class="pr-4">
+                    <span class="text-[9px] font-black text-blue-600 uppercase">Missão {{ m.id }}</span>
+                    <h4 class="font-bold text-slate-800 text-sm leading-tight">{{ m.titulo }}</h4>
+                </div>
+                <span class="text-slate-300">➔</span>
+            </div>
+        </div>
+    </main>
+
+    <main v-if="tela === 'jogar'" class="flex-1 flex flex-col animate__animated animate__fadeIn">
+        <div class="w-full bg-slate-100 h-1.5">
+            <div class="bg-blue-600 h-full progress-bar" :style="{ width: (passo/4)*100 + '%' }"></div>
+        </div>
+
+        <div class="p-6">
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl mb-8 shadow-sm">
+                <p class="text-xs leading-relaxed text-amber-900"><strong>Cenário:</strong> {{ missaoAtual.texto }}</p>
+            </div>
+
+            <div v-if="passo <= 4">
+                <div class="mb-6">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Etapa {{ passo }} de 4</span>
+                    <h4 class="text-lg font-black text-slate-800">{{ categorias[passo-1] }}</h4>
+                </div>
+                
+                <div class="space-y-3">
+                    <button v-for="c in filtrarCartas()" :key="c.id" @click="escolher(c)" 
+                         class="w-full text-left p-4 btn-card rounded-xl text-sm font-semibold shadow-sm">
+                        {{ c.texto }}
+                    </button>
+                </div>
+            </div>
+
+            <div v-if="passo > 4" class="text-center animate__animated animate__zoomIn">
+                <div class="text-7xl mb-4">{{ medalha }}</div>
+                <h2 class="text-3xl font-black text-slate-800 mb-1">Nível {{ nivel }}</h2>
+                
+                <div class="mt-6 p-5 rounded-2xl text-left shadow-inner border" 
+                     :class="nivel === 'OURO' ? 'bg-green-50 border-green-200' : (nivel === 'INVÁLIDO' ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200')">
+                    
+                    <p class="text-xs font-bold uppercase text-slate-400 mb-2">Relatório do Fiscalito:</p>
+                    <p class="text-sm leading-relaxed text-slate-700">{{ feedbackFinal }}</p>
+                    
+                    <div v-if="nivel !== 'OURO'" class="mt-4 pt-3 border-t border-slate-200">
+                        <p class="text-xs font-bold text-slate-500 mb-1">Revisão Necessária:</p>
+                        <a href="https://leis.alesc.sc.gov.br/ato-normativo/53082" target="_blank" class="text-blue-600 font-black text-sm underline flex items-center gap-1">
+                            📥 Baixe a IN 10/2025 aqui
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex flex-col gap-3">
+                    <button @click="resetar" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all">
+                        PRÓXIMA MISSÃO
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+const { createApp } = Vue
+createApp({
+    data() {
+        return {
+            tela: 'inicio', passo: 1, missaoAtual: null, selecao: [],
+            categorias: ['Defina o Objetivo', 'Escolha a Métrica', 'Defina a Fonte de Dados', 'Escolha a Faixa de Ajuste'],
+            missoes: [
+                { id: 'A', titulo: 'Limpeza de Banheiros', texto: 'Banheiros públicos do bloco B estão sem limpeza antes do expediente.', ouro: ['O1','M1','F1','P7'] },
+                { id: 'B', titulo: 'Fiscalização de EPIs', texto: 'Operadores de roçagem trabalhando sem óculos e protetor auricular.', ouro: ['O2','M2','F4','P2'] },
+                { id: 'D', titulo: 'Resposta do Preposto', texto: 'A empresa ignora chamados no SGPe por mais de 48 horas.', ouro: ['O3','M3','F3','P3'] },
+                { id: 'F', titulo: 'Folha de Pagamento', texto: 'Denúncia de que os salários do mês passado ainda não foram depositados.', ouro: ['O5','M5','F7','P4'] },
+                { id: 'G', titulo: 'Falha na Execução', texto: 'O serviço contratado foi interrompido sem aviso prévio por falha técnica.', ouro: ['O6','M6','F2','P6'] }
+            ],
+            cartas: [
+                { id: 'O1', cat: 'Defina o Objetivo', texto: 'Assegurar ambiente higienizado antes do expediente.' },
+                { id: 'O2', cat: 'Defina o Objetivo', texto: 'Assegurar fornecimento e uso obrigatório de EPIs.' },
+                { id: 'O3', cat: 'Defina o Objetivo', texto: 'Garantir ciência e resposta rápida às solicitações.' },
+                { id: 'O5', cat: 'Defina o Objetivo', texto: 'Garantir cumprimento das obrigações trabalhistas.' },
+                { id: 'O6', cat: 'Defina o Objetivo', texto: 'Garantir execução integral conforme especificações.' },
+                { id: 'OA', cat: 'Defina o Objetivo', texto: 'Deixar o fiscal contente com o trabalho da empresa.' }, 
+                { id: 'M1', cat: 'Escolha a Métrica', texto: 'Quantidade de ocorrências de falha registradas no checklist.' },
+                { id: 'M2', cat: 'Escolha a Métrica', texto: 'Quantidade de empregados sem EPI por inspeção.' },
+                { id: 'M3', cat: 'Escolha a Métrica', texto: 'Tempo (horas) entre o chamado e a resposta oficial.' },
+                { id: 'M5', cat: 'Escolha a Métrica', texto: 'Dias de atraso após o 5º dia útil do mês.' },
+                { id: 'M6', cat: 'Escolha a Métrica', texto: 'Número de falhas graves detectadas no serviço.' },
+                { id: 'MA', cat: 'Escolha a Métrica', texto: 'Nível de satisfação visual avaliado pelo fiscal.' }, 
+                { id: 'F1', cat: 'Defina a Fonte de Dados', texto: 'Checklist diário assinado e anexado ao SGPe.' },
+                { id: 'F2', cat: 'Defina a Fonte de Dados', texto: 'Relatório de Ocorrência formalizado no SGPe.' },
+                { id: 'F3', cat: 'Defina a Fonte de Dados', texto: 'Relatório extraído de sistema oficial de chamados.' },
+                { id: 'F4', cat: 'Defina a Fonte de Dados', texto: 'Registro fotográfico datado via app institucional.' },
+                { id: 'F7', cat: 'Defina a Fonte de Dados', texto: 'Comprovantes bancários ou extratos de pagamento.' },
+                { id: 'FA', cat: 'Defina a Fonte de Dados', texto: 'Conversa no WhatsApp com o supervisor da empresa.' }, 
+                { id: 'P7', cat: 'Escolha a Faixa de Ajuste', texto: 'Pontuação por número de ocorrências.' },
+                { id: 'P2', cat: 'Escolha a Faixa de Ajuste', texto: 'Graduação por volume de pessoal irregular.' },
+                { id: 'P3', cat: 'Escolha a Faixa de Ajuste', texto: 'Graduação por horas de atraso na resposta.' },
+                { id: 'P4', cat: 'Escolha a Faixa de Ajuste', texto: 'Desconto por dia de atraso salarial.' },
+                { id: 'P6', cat: 'Escolha a Faixa de Ajuste', texto: 'Glosa integral do item de serviço não executado.' },
+                { id: 'PA', cat: 'Escolha a Faixa de Ajuste', texto: 'Multa de 10% sobre o contrato por qualquer erro.' }
+            ]
+        }
+    },
+    computed: {
+        nivel() {
+            if (this.selecao.some(id => id.includes('A'))) return 'INVÁLIDO';
+            let acertos = 0;
+            this.selecao.forEach((id, i) => { if(id === this.missaoAtual.ouro[i]) acertos++; });
+            if (acertos === 4) return 'OURO';
+            if (acertos === 3) return 'PRATA';
+            if (acertos === 2) return 'BRONZE';
+            return 'REPROVADO';
+        },
+        medalha() {
+            const m = { 'OURO': '🏆', 'PRATA': '🥈', 'BRONZE': '🥉', 'INVÁLIDO': '❌', 'REPROVADO': '⚠️' };
+            return m[this.nivel];
+        },
+        feedbackFinal() {
+            if (this.nivel === 'OURO') return "Excelente! Você montou um indicador imbatível. O uso do SGPe garante que a rastreabilidade seja o nosso escudo!";
+            if (this.nivel === 'INVÁLIDO') return "Atenção: Você usou cartas subjetivas ou fontes informais (WhatsApp). Isso torna a glosa ilegal e fácil de ser derrubada juridicamente.";
+            return "O indicador tem fundamento, mas carece de precisão técnica na fonte ou na faixa de ajuste. Revise a IN 10/2025 para garantir a segurança jurídica.";
+        }
+    },
+    methods: {
+        irParaMissoes() { this.tela = 'missoes'; },
+        selecionarMissao(m) { this.missaoAtual = m; this.passo = 1; this.selecao = []; this.tela = 'jogar'; },
+        filtrarCartas() {
+            const catAtual = this.categorias[this.passo - 1];
+            return this.cartas.filter(c => c.cat === catAtual);
+        },
+        escolher(c) {
+            this.selecao.push(c.id);
+            if (this.passo <= 4) this.passo++;
+        },
+        resetar() { this.tela = 'missoes'; this.passo = 1; this.selecao = []; }
+    }
+}).mount('#app')
+</script>
+</body>
+</html>
